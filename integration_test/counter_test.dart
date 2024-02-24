@@ -1,70 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_integration_tests/counter_app.dart';
+import 'package:flutter_integration_tests/countre_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  group('Тестируем интерфейс счетчика автоматически', () {
+  setUpAll(() async {
+    await CounterStorage.instance.init();
+  });
+
+  group('Тестируем счетчик автоматически', () {
     testWidgets(
-      'Нажатие на кнопку + один раз увеличивает счетчик',
+      'При отсутствии данных инициализируется с 0',
       (tester) async {
-        // Устанавливаем виджет в качестве сцены
+        await (await SharedPreferences.getInstance()).clear();
+
         await tester.pumpWidget(const CounterApp());
 
-        // Проверяем, что базовый текст равен 0
-        expect(find.text('0'), findsOneWidget);
-
-        // Находим виджет кнопки по его ключу
-        // Ключ - уникальный идентификатор виджета в дереве (на экране)
-        final fab = find.byKey(const Key('increment'));
-
-        // Делаем задержку, чтобы увидеть UI
         await Future.delayed(const Duration(seconds: 1));
 
-        // Имитируем нажатие на кнопку
-        await tester.tap(fab);
-
-        // Ожидаем следующего кадра, когда нажатие даст результат
-        await tester.pumpAndSettle();
-
-        // Делаем задержку, чтобы увидеть изменения
-        await Future.delayed(const Duration(seconds: 1));
-
-        // Проверяем, что текст стал равен 1
-        expect(find.text('1'), findsOneWidget);
+        expect(find.text(valueTitle(0)), findsOneWidget);
       },
     );
 
     testWidgets(
-      'Нажатие на кнопку + пять раз увеличивает счетчик на 5',
+      'При наличии данных инициализируется с ними',
       (tester) async {
-        // Устанавливаем виджет в качестве сцены
+        await (await SharedPreferences.getInstance()).setInt('counter_key', 10);
+
         await tester.pumpWidget(const CounterApp());
 
-        // Проверяем, что базовый текст равен 0
-        expect(find.text('0'), findsOneWidget);
-
-        // Находим виджет кнопки по его ключу
-        // Ключ - уникальный идентификатор виджета в дереве (на экране)
-        final fab = find.byKey(const Key('increment'));
-
-        // Делаем задержку, чтобы увидеть UI
         await Future.delayed(const Duration(seconds: 1));
 
-        for (var i = 0; i < 5; i++) {
-          // Имитируем нажатие на кнопку
-          await tester.tap(fab);
-          // Ожидаем следующего кадра, когда нажатие даст результат
-          await tester.pumpAndSettle();
+        expect(find.text(valueTitle(10)), findsOneWidget);
+      },
+    );
 
-          // Делаем задержку, чтобы увидеть UI
-          await Future.delayed(const Duration(milliseconds: 500));
-        }
+    testWidgets(
+      'При наличии данных инициализируется с ними',
+      (tester) async {
+        await (await SharedPreferences.getInstance()).setInt('counter_key', 10);
 
-        // Проверяем, что текст стал равен 5
-        expect(find.text('5'), findsOneWidget);
+        await tester.pumpWidget(const CounterApp());
+
+        await Future.delayed(const Duration(seconds: 1));
+        expect(find.text(valueTitle(10)), findsOneWidget);
+
+        await tester.tap(find.byType(FloatingActionButton));
+
+        await tester.pumpAndSettle();
+        await Future.delayed(const Duration(seconds: 1));
+
+        await (await SharedPreferences.getInstance()).setInt('counter_key', 11);
+        expect(find.text(valueTitle(11)), findsOneWidget);
       },
     );
   });

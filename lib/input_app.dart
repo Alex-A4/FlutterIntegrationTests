@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-const errorMessage = 'Текст пустой';
 const labelMessage = 'Введите что-нибудь';
+const errorMessage = 'Текст пустой';
 const formValidMessage = 'Форма валидна';
 
-/// Корневой виджет страницы инпута
 class InputApp extends StatelessWidget {
   const InputApp({super.key});
 
@@ -12,64 +11,55 @@ class InputApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Инпут',
-      home: InputPage(),
+      home: InputView(),
     );
   }
 }
 
-/// Основной виджет для проверки инпута
-class InputPage extends StatefulWidget {
-  const InputPage({super.key});
+class InputView extends StatefulWidget {
+  const InputView({super.key});
 
   @override
-  State<InputPage> createState() => _InputPageState();
+  State<InputView> createState() => _InputViewState();
 }
 
-class _InputPageState extends State<InputPage> {
-  // Контроллер для текстового поля, чтобы можно было управлять программно
+class _InputViewState extends State<InputView> {
   final _controller = TextEditingController();
+  final _key = GlobalKey<FormState>();
 
-  /// Глобальный ключ, чтобы можно было валидировать форму программно
-  final _formKey = GlobalKey<FormState>();
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Инпут'),
-      ),
+      appBar: AppBar(title: const Text('Инпут')),
       body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Center(
-          child: Form(
-            key: _formKey,
-            child: TextFormField(
-              controller: _controller,
-              validator: (value) {
-                // Если значение инпута пустое, то показываем ошибку
-                if (value == null || value.isEmpty) return errorMessage;
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _key,
+          child: TextFormField(
+            controller: _controller,
+            validator: (value) {
+              if (value == null || value.isEmpty) return errorMessage;
 
-                // иначе ошибок нет
-                return null;
-              },
-              decoration: InputDecoration(
-                labelText: labelMessage,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+              return null;
+            },
+            decoration: InputDecoration(
+              labelText: labelMessage,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.question_mark),
         onPressed: () {
-          // Пытаемся валидировать форму (по дефолту не валидна)
-          final valid = _formKey.currentState?.validate() ?? false;
-
-          // Если форма валидна, то отображаем сообщение на 3 секунды
-          if (valid) {
+          if (_key.currentState?.validate() ?? false) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text(formValidMessage),
@@ -78,6 +68,7 @@ class _InputPageState extends State<InputPage> {
             );
           }
         },
+        child: const Icon(Icons.question_mark),
       ),
     );
   }

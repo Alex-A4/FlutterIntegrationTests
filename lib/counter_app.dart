@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_integration_tests/countre_storage.dart';
 
-/// Корневой виджет страницы счетчика
+String valueTitle(int value) {
+  return 'Текущее значение: $value';
+}
+
 class CounterApp extends StatelessWidget {
   const CounterApp({super.key});
 
@@ -8,27 +12,34 @@ class CounterApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Счетчик',
-      home: CounterPage(),
+      home: CounterView(),
     );
   }
 }
 
-/// Виджет, содержащий основное действие с инкрементом
-class CounterPage extends StatefulWidget {
-  const CounterPage({super.key});
+class CounterView extends StatefulWidget {
+  const CounterView({super.key});
 
   @override
-  State<CounterPage> createState() => _CounterPageState();
+  State<CounterView> createState() => _CounterViewState();
 }
 
-class _CounterPageState extends State<CounterPage> {
-  int _counter = 0;
+class _CounterViewState extends State<CounterView> {
+  late final ValueNotifier<int> _notifier;
 
-  /// Изменяем значение счетчика и обновляем состояние виджета (экрана)
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
+  @override
+  void initState() {
+    _notifier = ValueNotifier(CounterStorage.instance.counterValue);
+    _notifier.addListener(() {
+      CounterStorage.instance.setCounter(_notifier.value);
     });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _notifier.dispose();
+    super.dispose();
   }
 
   @override
@@ -38,24 +49,15 @@ class _CounterPageState extends State<CounterPage> {
         title: const Text('Счетчик'),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'Вы нажали на кнопку столько раз:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+        child: ValueListenableBuilder<int>(
+          valueListenable: _notifier,
+          builder: (context, value, child) {
+            return Text(valueTitle(value));
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        // Ключ позволит найти конкретную кнопку в дереве виджетов
-        key: const Key('increment'),
-        onPressed: _incrementCounter,
-        tooltip: 'Увеличить',
+        onPressed: () => _notifier.value = _notifier.value + 1,
         child: const Icon(Icons.add),
       ),
     );

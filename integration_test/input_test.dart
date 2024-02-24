@@ -10,62 +10,51 @@ void main() {
     testWidgets(
       'Валидация пустого инпута дает ошибку',
       (tester) async {
-        // Устанавливаем виджет в качестве сцены
         await tester.pumpWidget(const InputApp());
 
-        // Проверяем, что изначально ошибки нет и отображается label
-        expect(find.text(errorMessage), findsNothing);
         expect(find.text(labelMessage), findsOneWidget);
+        expect(find.text(errorMessage), findsNothing);
 
-        // Находим виджет кнопки по его типу
-        final fab = find.byType(FloatingActionButton);
-
-        // Имитируем нажатие на кнопку
-        await tester.tap(fab);
-
-        // Ожидаем следующего кадра, когда нажатие даст результат
-        await tester.pumpAndSettle();
-
-        // Делаем задержку, чтобы увидеть изменения
         await Future.delayed(const Duration(seconds: 1));
 
-        // Проверяем, что отобразилась ошибка и label так же виден
-        expect(find.text(errorMessage), findsOneWidget);
+        final fab = find.byType(FloatingActionButton);
+        await tester.tap(fab);
+
+        await tester.pumpAndSettle();
+
+        await Future.delayed(const Duration(seconds: 1));
+
         expect(find.text(labelMessage), findsOneWidget);
+        expect(find.text(errorMessage), findsOneWidget);
       },
     );
 
     testWidgets(
-      'Валидация не пустого инпута отображает текст',
+      'Валидация не пустого инпута отображает сообщение',
       (tester) async {
-        // Устанавливаем виджет в качестве сцены
         await tester.pumpWidget(const InputApp());
 
-        // Проверяем, что изначально ошибки и сообщения о валидности нет, отображается label
-        expect(find.text(errorMessage), findsNothing);
         expect(find.text(labelMessage), findsOneWidget);
         expect(find.text(formValidMessage), findsNothing);
+        expect(find.text(errorMessage), findsNothing);
 
-        // вводим в инпут какой-нибудь текст
-        await tester.enterText(find.byType(TextFormField), 'Ыыыы');
-
-        // Находим виджет кнопки по его типу
-        final fab = find.byType(FloatingActionButton);
-
-        // Имитируем нажатие на кнопку
-        await tester.tap(fab);
-
-        // Ожидаем следующего кадра, когда нажатие даст результат
-        await tester.pumpAndSettle();
-
-        // Делаем задержку, чтобы увидеть изменения
         await Future.delayed(const Duration(seconds: 1));
 
-        // Проверяем, что отобразилось сообщение о валидности, label все еще виден (сверху),
-        // а ошибки нет
-        expect(find.text(errorMessage), findsNothing);
+        await tester.enterText(find.byType(TextFormField), 'Ыыыыыы');
+        await tester.pumpAndSettle();
+
+        await Future.delayed(const Duration(seconds: 1));
+
+        final fab = find.byType(FloatingActionButton);
+        await tester.tap(fab);
+
+        await tester.pumpAndSettle();
+
+        await Future.delayed(const Duration(seconds: 1));
+
         expect(find.text(labelMessage), findsOneWidget);
         expect(find.text(formValidMessage), findsOneWidget);
+        expect(find.text(errorMessage), findsNothing);
       },
     );
   });
